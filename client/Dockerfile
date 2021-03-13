@@ -1,4 +1,4 @@
-FROM node:12.10.0
+FROM node:13.7.0
 
 # copy package.json and package-lock.json into /usr/app
 WORKDIR /usr/app
