@@ -260,36 +260,38 @@ export const mainReducer = (state, action) => {
 		case actionTypes.sendTestEmail:
 			//weird error so not usign this
 			//SendAPI.post("api/send-test-email/", data).then(response => {
-			axios.post(`http://localhost:5000/api/send-test-email`, data).then(response => {
-				const k = response;
-				return {
-					...copyOfState,
-					showFetching: false,
-					snackbar: {
-						...state.snackbar,
-						messageInfo: {
-							message: "Preview email has been sent",
-							key: new Date().getTime()
+			if (state.showFetching) {
+				axios.post(`http://localhost:5000/api/send-test-email`, data).then(response => {
+					const k = response;
+					return {
+						...copyOfState,
+						showFetching: false,
+						snackbar: {
+							...state.snackbar,
+							messageInfo: {
+								message: "Preview email has been sent",
+								key: new Date().getTime()
+							},
+							open: true
 						},
-						open: true
-					},
-					showPreview: !action.closeAfter
-				};
-			}).catch(error => {
-				console.log(error);
-				return {
-					...copyOfState,
-					showFetching: false,
-					snackbar: {
-						...state.snackbar,
-						messageInfo: {
-							message: "Error sending email, try again",
-							key: new Date().getTime()
-						},
-						open: true
-					}
-				};
-			});
+						showPreview: !action.closeAfter
+					};
+				}).catch(error => {
+					console.log(error);
+					return {
+						...copyOfState,
+						showFetching: false,
+						snackbar: {
+							...state.snackbar,
+							messageInfo: {
+								message: "Error sending email, try again",
+								key: new Date().getTime()
+							},
+							open: true
+						}
+					};
+				});
+			}
 			return {
 				...state,
 				showFetching: false
