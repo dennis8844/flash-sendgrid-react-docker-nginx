@@ -16,7 +16,7 @@ function getData() {
   }
 
   // open the request with the verb and the url
-  xhr.open('GET', '/api/test')
+  xhr.open('GET', '/test')
   // send the request
   xhr.send()
 }

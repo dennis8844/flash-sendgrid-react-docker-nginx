@@ -38,3 +38,14 @@ Usage
 
 - expose new api endpoints in the server view
 - read from endpoints in client
+
+
+You can access the dev server at localhost:3000
+
+orig enviroment files form here:
+ui components form here:
+sendgrid files from https://github.com/sendgrid/sendgrid-python/
+
+once containers are up, you have to access the terminal to the server container....
+- create a `.env` file in the server directory so docker can csee it and build accordingly
+

@@ -10,3 +10,5 @@ RUN mkdir server
 ADD server $CONTAINER_HOME/server
 
 RUN pip install --no-cache-dir -r requirements.txt
+
+RUN cd server && export FLASK_ENV=development
