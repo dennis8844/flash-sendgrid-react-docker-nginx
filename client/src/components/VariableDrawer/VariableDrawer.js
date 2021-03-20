@@ -7,14 +7,11 @@ import {
 	IconButton,
 	List,
 	ListItem,
-	ListItemIcon,
-	ListItemText,
 	TextField
 } from '@material-ui/core';
 import {
 	ChevronLeft,
-	ChevronRight,
-	Refresh
+	ChevronRight
 } from '@material-ui/icons';
 
 const VariableDrawer = (props) => {
@@ -23,7 +20,6 @@ const VariableDrawer = (props) => {
 		variables,
 		onVariableChange,
 		onClose,
-		onReset,
 		width
 	} = props,
 	useStypes = makeStyles((theme) => ({
@@ -51,20 +47,26 @@ const VariableDrawer = (props) => {
 	classes = useStypes(),
 	inputVariableKeys = Object.keys(variables);
 
+	/**
+	 * closes the drawer of inputs
+	 * @param e
+	 */
 	const handleDrawerClose = e => {
 		if (e) {
+			e.preventDefault();
+			e.stopPropagation();
 			onClose(e);
 		}
 	}
 
-	const handleVariablesReset = e => {
-		if (e) {
-			onReset(e);
-		}
-	}
-
+	/**
+	 * changes the content in state for the input with event
+	 * @param e
+	 */
 	const handleInputChange = e => {
 		if (e) {
+			e.preventDefault();
+			e.stopPropagation();
 			onVariableChange(e);
 		}
 	}
@@ -78,21 +80,26 @@ const VariableDrawer = (props) => {
 			classes={{
 				paper: classes.drawerPaper,
 			}}
+			data-test-id="variable-drawer"
 		>
 			<div className={classes.drawerHeader}>
-				<IconButton onClick={handleDrawerClose}>
+				<IconButton onClick={handleDrawerClose} data-test-id={"close-drawer-button"}>
 					{theme.direction === 'rtl' ? <ChevronLeft /> : <ChevronRight />}
 				</IconButton>
 			</div>
 			<Divider />
 			<List>
 				{inputVariableKeys.map((inputKeyName, keyIndex) => {
+					/**
+					 * Loop through inputs
+					 */
 					if (variables[inputKeyName].inDrawer) {
 						let customProps = {...variables[inputKeyName]},
 							inputProps;
 						const isTouched = !!customProps.touched;
-						if (customProps.type === "number") {
+						if (customProps.type === "number") { //pass on num props to the input for html5 to do the validation
 							let foundNumProps = {};
+							foundNumProps.tabIndex = customProps.tabIndex;
 							if (!!customProps.min || customProps.min === 0) foundNumProps.min = customProps.min;
 							if (!!customProps.max) foundNumProps.max = customProps.max;
 							if (!!customProps.step) foundNumProps.step = customProps.step;
@@ -101,7 +108,12 @@ const VariableDrawer = (props) => {
 							}
 						}
 						delete customProps.inDrawer;
+						delete customProps.inPreview;
 						delete customProps.touched;
+						delete customProps.usesTemplate;
+						delete customProps.tabIndex;
+						delete customProps.previousValue;
+
 
 						return (
 							<ListItem key={keyIndex} className={classes.drawerListItem}>
@@ -111,28 +123,15 @@ const VariableDrawer = (props) => {
 									className={isTouched ? "touched" : ""}
 								   onChange={handleInputChange}
 									InputLabelProps={{
-										shrink: true,
+										shrink: true
 									}}
-								   InputProps={ !!inputProps ? {
-								   	   inputProps: inputProps } : {}
-								   }
+								   InputProps={ inputProps }
 								/>
 							</ListItem>
 						);
 					}
 					return "";
 				})}
-			</List>
-			<Divider />
-			<List>
-				<ListItem button onclick={handleVariablesReset}>
-					<ListItemIcon>
-						<Refresh />
-					</ListItemIcon>
-					<ListItemText >
-						Reset Variables
-					</ListItemText>
-				</ListItem>
 			</List>
 		</Drawer>
 	);
@@ -149,7 +148,6 @@ VariableDrawer.propTypes = {
 	variables: PropTypes.object,
 	onVariableChange: PropTypes.func.isRequired,
 	onClose: PropTypes.func.isRequired,
-	onReset: PropTypes.func.isRequired,
 	width: PropTypes.number.isRequired
 };
 

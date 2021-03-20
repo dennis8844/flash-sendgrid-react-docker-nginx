@@ -17,7 +17,7 @@ services:
     client:
         build:
             context: ../client
-            dockerfile: Dockerfile
+            dockerfile: Dockerfile-client
         container_name: client
         command: npm start
         volumes:
@@ -31,6 +31,28 @@ services:
         stdin_open: true
         ports:
             - "3000:3000"
+    frontendtest:
+        build:
+            context: ../client
+            dockerfile: Dockerfile-frontendtest
+        container_name: frontendtest
+        volumes:
+            - ../client:/usr/app
+            - /usr/app/node_modules
+        stdin_open: false
+        environment:
+          - CI=true
+    designsystem:
+        build:
+            context: ../client/src/_designsystem
+            dockerfile: Dockerfile-designsystem
+        container_name: designsystem
+        volumes:
+            - ../client/src/designsystem:/usr/app
+            - /usr/app/node_modules
+        ports:
+            - "6006:6006"
+        stdin_open: false
     server:
         build:
             context: ../

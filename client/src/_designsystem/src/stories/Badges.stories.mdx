@@ -1,0 +1,83 @@
+import { Meta, Canvas, Story } from '@storybook/addon-docs/blocks';
+import Badge from '../_material-toolkit-components/Badge/Badge.js';
+import Button from '../_material-toolkit-components/CustomButtons';
+import badgeStyle from "../_material-toolkit-components/_assets/jss/material-kit-react/components/badgeStyle.js";
+import * as badgeStories from './badgeStories.js';
+const argTypes = badgeStories.badgeArgs.argTypes;
+
+
+<Meta title="Components/Badges" component={Badge} argTypes={argTypes} />
+
+# Badges
+
+## Styles
+You will find the styles for this component in
+`src/_assets/jss/material-kit-react/components/badgeStyle.js.`
+
+## Imports
+If you want to use our predefined components:
+
+```javascript
+import Badge from 'components/Badge/Badge.js';
+```
+
+If you want to use our styles on something else:
+
+```javascript
+import badgeStyle from "assets/jss/material-kit-react/components/badgeStyle.js"
+```
+
+## Example
+
+<Canvas>
+  <Story name="Badge in Button">
+    <Button color="primary">
+      Notifications{" "}
+      <Badge>
+        4
+      </Badge>
+    </Button>
+  </Story>
+</Canvas>
+
+## Contextual variations
+
+<Canvas>
+<Story name="Pre Set Colors">
+  <div>
+    <Badge color="primary">primary</Badge>
+    <Badge color="info">info</Badge>
+    <Badge color="success">success</Badge>
+    <Badge color="danger">danger</Badge>
+    <Badge color="warning">warning</Badge>
+    <Badge color="rose">rose</Badge>
+  </div>
+</Story>
+</Canvas>
+
+## Props
+
+Props here
+
+```javascript
+Badge.defaultProps = {
+  color: "gray"
+};
+
+Badge.propTypes = {
+  classes: PropTypes.object.isRequired,
+  color: PropTypes.oneOf([
+    "primary",
+    "warning",
+    "danger",
+    "success",
+    "info",
+    "rose",
+    "gray"
+  ])
+};
+```
+
+See for  youself
+
+<Story story={badgeStories.Props} />

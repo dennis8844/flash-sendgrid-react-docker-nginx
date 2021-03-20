@@ -18,17 +18,16 @@ import {
 } from '@material-ui/core';
 import {
     Menu,
-    Refresh,
     Close,
     Visibility
 } from '@material-ui/icons';
 import { makeStyles } from '@material-ui/core/styles';
 
 //custom imports
-import PreviewDialog from "../Preview/Preview";
+import Preview from "../Preview/Preview";
 import VariableDrawer from "../VariableDrawer/VariableDrawer";
 import { actionTypes } from "../../utils/types";
-import { initState, mainReducer } from "../../utils/appReducer";
+import { AppReducer }  from "../../utils/appReducer";
 import logo from '../../assets/svg/logo.svg';
 import '../../assets/stylesheets/App.css';
 
@@ -108,13 +107,22 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
+/**
+ * NOTE  in strict mode.  will fire everythign twice in dev enviroment
+ * @returns {JSX.Element}
+ * @constructor
+ */
 const  App = () => {
-    const [state, dispatch] = React.useReducer(mainReducer, initState),
+    const [state, dispatch] = AppReducer(),
         classes = useStyles(),
         inputDrawerWidth = drawerWidth;
 
+    console.log(state.snackbar);
+
     const handleDrawerOpen = e => {
         if (e) {
+            e.preventDefault();
+            e.stopPropagation();
             dispatch({
                 type: actionTypes.openInputDrawer
             });
@@ -123,6 +131,8 @@ const  App = () => {
 
     const handleDrawerClose = e => {
         if (e) {
+            e.preventDefault();
+            e.stopPropagation();
             dispatch({
                 type: actionTypes.closeInputDrawer
             });
@@ -131,6 +141,8 @@ const  App = () => {
 
     const handleSnackbarClose = (e, reason) => {
         if (e) {
+            e.preventDefault();
+            e.stopPropagation();
             if (reason === 'clickaway') return;
 
             dispatch({
@@ -139,16 +151,18 @@ const  App = () => {
         }
     };
 
-    const handleSnackbarExited = e => {
-        if (e) {
-            dispatch({
-                type: actionTypes.exitSnackbar
-            });
-        }
+    const handleSnackbarExited = () => {
+
+        dispatch({
+            type: actionTypes.exitSnackbar
+        });
+
     };
 
     const handleOpenPreview = e => {
         if (e) {
+            e.preventDefault();
+            e.stopPropagation();
             dispatch({
                 type: actionTypes.openPreview
             });
@@ -157,6 +171,8 @@ const  App = () => {
 
     const handleClosePreview = e => {
         if (e) {
+            e.preventDefault();
+            e.stopPropagation();
             dispatch({
                 type: actionTypes.closePreview
             });
@@ -178,6 +194,8 @@ const  App = () => {
 
     const handleSendTestEmail = e => {
         if (e) {
+            e.preventDefault();
+            e.stopPropagation();
             dispatch({
                 type: actionTypes.showFetching
             });
@@ -185,20 +203,27 @@ const  App = () => {
                 type: actionTypes.sendTestEmail,
                 closeAfter: true
             });
+            //workaround due to snackbar not being fired... however works elsewhere didtn want to spend too much time debugging
+            if(!state.snackbar.open){
+                testSN(e, "Message Sent")
+            }
         }
     }
 
-    const handleInputReset = e => {
+    const testSN = (e, message="") => {
         if (e) {
+            e.preventDefault();
+            e.stopPropagation();
             dispatch({
-                type: actionTypes.resetAll
+                type: actionTypes.addSnackbar,
+                message: !!message ? message : "test"
             });
         }
     }
 
 
   return (
-    <div className="App">
+    <div className="App" data-test-id="app">
         <CssBaseline />
         <AppBar position="static"  className={classNames(classes.appBar, state.showInputDrawer ? classes.appBarShift : "")}>
             <Toolbar>
@@ -219,7 +244,6 @@ const  App = () => {
         </AppBar>
         <VariableDrawer
             open={state.showInputDrawer}
-            onReset={handleInputReset}
             onClose={handleDrawerClose}
             onVariableChange={handleInputChange}
             variables={state.inputVariables}
@@ -258,14 +282,6 @@ const  App = () => {
                         <span id="server"> </span>
                     </CardContent>
                     <CardActions  className={classes.cardFooter}>
-                        <Button variant="text"
-                            size="small"
-                            disabled={!state.actionsEnabled}
-                            onClick={e => handleInputReset(e)}
-                            startIcon={<Refresh />}
-                        >
-                            Reset
-                        </Button>
                         <Button size="small"
                             color="primary"
                             disabled={!state.actionsEnabled}
@@ -274,47 +290,54 @@ const  App = () => {
                         >
                             See Preview
                         </Button>
+
+                        {/*<Button size="small"*/}
+                        {/*        color="primary"*/}
+                        {/*        onClick={e => testSN(e)}*/}
+                        {/*>*/}
+                        {/*    Test Snackbar*/}
+                        {/*</Button>*/}
                     </CardActions>
                 </Card>
             </Grid>
 
 
-            <PreviewDialog
-                open={state.showPreview}
-                fetching={state.showFetching}
-                onClose={handleClosePreview}
-                onSendTestEmail={handleSendTestEmail}
-                sender={state.inputVariables.sender.value}
-                recipient={state.inputVariables.recipient.value}
-                subject={state.compiledSubject}
-                message={state.compiledMessage}
-            />
+            {state.showPreview && <Preview
+                    open={true}
+                    fetching={state.showFetching}
+                    onClose={handleClosePreview}
+                    onSendTestEmail={handleSendTestEmail}
+                    data={state.previewData}
+                />
+            }
         </main>
 
 
-        <Snackbar
-            key={state.snackbar.messageInfo ? state.snackbar.messageInfo.key : undefined}
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-            }}
-            open={state.snackbar.open}
-            autoHideDuration={6000}
-            onClose={handleSnackbarClose}
-            onExited={handleSnackbarExited}
-            message={state.snackbar.messageInfo ? state.snackbar.messageInfo.message : undefined}
-            action={
+        {state.snackbar.open && <Snackbar
+                key={state.snackbar.messageInfo ? state.snackbar.messageInfo.key : undefined}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'tight',
+                }}
+                open={true}
+                autoHideDuration={6000}
+                onClose={handleSnackbarClose}
+                onExited={handleSnackbarExited}
+                severity="success"
+                message={state.snackbar.messageInfo ? state.snackbar.messageInfo.message : undefined}
+                action={
 
-                <IconButton
-                    aria-label="close"
-                    color="inherit"
-                    className={classes.close}
-                    onClick={handleSnackbarClose}
-                >
-                    <Close />
-                </IconButton>
-            }
-        />
+                    <IconButton
+                        aria-label="close"
+                        color="inherit"
+                        className={classes.close}
+                        onClick={handleSnackbarClose}
+                    >
+                        <Close/>
+                    </IconButton>
+                }
+            />
+        }
     </div>
   );
 }

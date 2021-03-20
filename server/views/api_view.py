@@ -14,8 +14,10 @@ resp_headers = {"Content-Type": "application/json"}
 
 @api_bp.route("/test", methods=["GET"])
 def index() -> Response:
-    """Defines the main website view"""
-    # logger.info("/test api hit")
+    """Defines the main website view
+
+        this is used for testing the response
+    """
     k = {
         "sender_email": "dpitcock+sendgrid@gmail.com",
         "recipient_email": "dpitcock+sendgrid2@gmail.com",
@@ -24,9 +26,20 @@ def index() -> Response:
     }
     return jsonify(isError= False, message= "Success", statusCode=200, data= k), 200
 
+
 @api_bp.route("/send-test-email", methods=["POST"])
 def send_test_email():
-    k = {}
+    """
+
+    Pretty boilerplate, I had to enable CORS
+
+    This takes the data, revalidates, then passese it to sendgrid via their package
+    it uses variables form the .env file in the server dir
+
+    Note, not all error codes are perfect
+
+    :return:
+    """
 
     request_data = json.loads(request.get_data(as_text=True))
     if len(request_data) > 0:
@@ -54,9 +67,6 @@ def send_test_email():
             else:
                 try:
                     valid =input_dict[value_key] is not None
-                    if input_dict[value_key] == "Please fix invalid input":
-                        errors_dict[value_key] = input_dict[value_key] + " matches boilerplate error string"
-                        return errors_dict
                 except KeyError:
                     errors_dict["sender_email"] = "email does not have value"
                     return errors_dict
@@ -65,7 +75,7 @@ def send_test_email():
         validate_value_key("message", request_data, data_errors_dict)
 
         if len(data_errors_dict) == 0:
-            #send on.
+            #send on. relabel data accordign to SG's packages requirements
             message = Mail(
                 from_email=request_data["sender_email"],
                 to_emails=request_data["recipient_email"],

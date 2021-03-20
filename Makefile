@@ -6,6 +6,9 @@ run-server:
 run-client:
 	npm start --prefix client
 
+run-frontendtest
+    npm test --watch
+
 test:
 	pytest --disable-pytest-warnings server/tests
 

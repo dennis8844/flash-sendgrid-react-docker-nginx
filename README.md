@@ -3,6 +3,10 @@ flask-react-nginx
 
 flask-react-nginx guide using docker-compose
 
+
+## **see server Readme for how to set up enviroment before building the containers**
+For sparing bandiwth and storage, I ommitted any node_modules and venv files form the containers. Those dependencies will be added on the build
+
 client
 ------
 
@@ -16,22 +20,27 @@ The server is responsible for exposing an api endpoint for client consumption. I
 Development
 -----------
 
-`docker-compose -f conf/docker-dev.yml up`
+To build the development enviroments (fron this directory) either:
+- type in the cli  `docker-compose -f conf/docker-dev.yml up`
+- or run a script `./scripts/dev.sh`
 
-I have made this easier by adding a dev script
+* Note that the react development server will compile and refresh on file changes, also uses React.StrictMode*
 
-`./scripts/dev.sh`
+In dev mode, it will also build a testing container.. however when building, it will just be built and then exited (not cluttering your terminal. You will have to activate it to use it
 
-*Note that the react development server will compile and refresh on file changes*
+To turn on the testing container
+- open a new terminal
+- get a list of image names if you need `docker image ls`. It should be `conf_frontendtest` <dirname>_<servicename>
+- start a container using that image `docker run -it conf_frontendtest bin\bash`
+- start up your testing
 
 Production
 ----------
 
-`docker-compose -f conf/docker-prod.yml up`
-
-I have made this easier by adding a production script
-
-`./scripts/prod.sh`
+To build a production enviroment, from this directory:
+- `docker-compose -f conf/docker-prod.yml up`
+- or the bash script`./scripts/prod.sh`
+* Note production not build and not tested, but scripts and setup configs are, including
 
 Usage
 -----
@@ -40,12 +49,12 @@ Usage
 - read from endpoints in client
 
 
-You can access the dev server at localhost:3000
+You can access the dev server UI at localhost:3000
 
-orig enviroment files form here:
-ui components form here:
-sendgrid files from https://github.com/sendgrid/sendgrid-python/
+Seems like a lot of code? Meh. Most of it is out there. It is a lot of piecing together and copyPasta from these three sites.
 
-once containers are up, you have to access the terminal to the server container....
-- create a `.env` file in the server directory so docker can csee it and build accordingly
+- orig enviroment files form: [https://github.com/AndrewRPorter/flask-react-nginx] (https://github.com/AndrewRPorter/flask-react-nginx)
+- ui components form: [https://material-ui.com/] (https://material-ui.com/)
+- sendgrid files from: [https://github.com/sendgrid/sendgrid-python/] (https://github.com/sendgrid/sendgrid-python/)
+
 

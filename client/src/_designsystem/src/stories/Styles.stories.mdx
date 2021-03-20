@@ -1,0 +1,18 @@
+import { Meta, Canvas, Story } from '@storybook/addon-docs/blocks';
+
+<Meta title="Getting Started/Styles" />
+
+# Styles
+
+Creative Tim, like their friends from [Material UI](https://material-ui-next.com/?ref=creativetim) used JSS syntax to style (restyle) the material ui components.
+
+A useful link about [JSS](https://github.com/cssinjs?ref=creativetim) is this one here.
+
+We've decided to use the `makeStyles` function from Material-UI to override some of thier styles. This is a React HOOK functions, which means that it can only be called from another React HOOK or a simple function. Read more about it [here](https://material-ui.com/styles/api/#makestyles-styles-options-hook)
+
+All of the restyled components can be found in `src/_material-toolkit-components` which ahs been restructured a bit form Creative Times original architecture to keep the components and the stories seperate for easier understanding.
+
+
+If you go to any of our components you will see that somewhere at the beginning of the file we import `makeStyles` from `material-ui`, then we import from `src/_material-toolkit-components/_assets/jss/*` the corresponding style for that component and after these imports, we use the `makeStyles` function alongside our styles to compile them to jss from javascript objects. Again, the directory of the assets has also been changed to keep them in a seperate directory from the stories.
+
+For a better way of understanding this variables, please take a look inside the `src/_material-toolkit-components/_assets/jss/material-dashboard-react`. You will see that all of the styles have a unique name that corresponds with the component name. You will also see that we've removed the styling for the views that were initially in the toolkit.

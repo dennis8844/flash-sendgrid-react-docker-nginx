@@ -1,20 +1,24 @@
-import Handlebars from "handlebars";
+import { useReducer } from "react";
 import axios from 'axios';
 import { variableTypes, actionTypes } from "./types";
-import { snakeCaseToCamelCase, validateByType } from "./functions";
-import SendAPI from "../apis/apis";
+import {
+	snakeCaseToCamelCase,
+	validateByType,
+	generatePreviewData,
+	generateTemplateValues
+} from "./functions";
+// import SendAPI from "../apis/apis";
+// console.log(SendAPI.get("/api/test"));
 
-console.log(SendAPI.get("/api/test"));
-
-export const initState = {
+export const initialState = {
 	inputVariables: {
-		sender: {
+		senderEmail: {
 			//value must match authenticated sender in sendgrid
 			value: "dpitcock+sendgrid@gmail.com",
 			previousValue: "dpitcock+sendgrid@gmail.com",
 			error: false,
 			type: variableTypes.email,
-			name: "sender",
+			name: "sender_email",
 			label: "sender",
 			required: true,
 			touched: false,
@@ -23,21 +27,23 @@ export const initState = {
 			readOnly: false,
 			helperText: "",
 			inDrawer: true,
-			tabIndex: 0
+			inPreview: true,
+			tabIndex: 5
 		},
-		recipient: {
+		recipientEmail: {
 			value: "dpitcock+sendgridTo@gmail.com",
 			previousValue: "dpitcock+sendgridTo@gmail.com",
 			error: false,
 			type: variableTypes.email,
-			name: "recipient",
+			name: "recipient_email",
 			label: "recipient",
 			required: true,
 			touched: false,
 			focused: false,
 			readOnly: false,
 			disabled: false,
-			tabIndex: 1,
+			tabIndex: 6,
+			inPreview: true,
 			inDrawer: true
 		},
 		contactFirstName: {
@@ -53,7 +59,8 @@ export const initState = {
 			readOnly: false,
 			disabled: false,
 			helperText: "",
-			tabIndex: 2,
+			tabIndex: 7,
+			inPreview: false,
 			inDrawer: true
 		},
 		discountRate: {
@@ -72,12 +79,13 @@ export const initState = {
 			disabled: false,
 			readOnly: false,
 			helperText: "",
-			tabIndex: 3,
+			tabIndex: 8,
+			inPreview: false,
 			inDrawer: true
 		},
 		discountCode: {
-			value: "Simon",
-			previousValue: "Simon",
+			value: "SIMON15",
+			previousValue: "SIMON15",
 			error: false,
 			type: variableTypes.text,
 			name: "discount_code",
@@ -88,7 +96,8 @@ export const initState = {
 			disabled: false,
 			readOnly: false,
 			helperText: "",
-			tabIndex: 4,
+			tabIndex: 9,
+			inPreview: false,
 			inDrawer: true
 		},
 		subject: {
@@ -104,6 +113,9 @@ export const initState = {
 			disabled: false,
 			readOnly: false,
 			helperText: "",
+			inPreview: true,
+			usesTemplate: true,
+			tabIndex: 1
 		},
 		message: {
 			value: "Hi {{contact_first_name}}, \n\nGood news! You can get {{discount_rate}} off your next pair of shoes by using this discount code: {{discount_code}}. Enjoy! \n\nSincerely, \nMarketer",
@@ -117,15 +129,20 @@ export const initState = {
 			focused: false,
 			disabled: false,
 			readOnly: false,
-			helperText: ""
+			helperText: "",
+			inPreview: true,
+			usesTemplate: true,
+			tabIndex: 2
 		},
 	},
+	previewData: {},
 	showPreview: false,
 	showInputDrawer: true,
 	showFetching: false,
 	compiledSubject: "",
 	compiledMessage: "",
 	actionsEnabled: true,
+	//resetEnabled: false,
 	snackbar: {
 		open: false,
 		messageInfo: {
@@ -134,73 +151,18 @@ export const initState = {
 	}
 };
 
-const copyOfInitState = {...initState};
-
-/**
- * conditionally parses values for the template if enabled
- * @param inputState
- * @param data
- * @returns {{actionsEnabled}|*}
- */
-const updateParsedState = (inputState, data) => {
-	if (!inputState.actionsEnabled) {
-		inputState.compiledSubject = "Please fix invalid input";
-		inputState.compiledMessage = "Please fix invalid input";
-
-	} else {
-		const subjectTemplate = Handlebars.compile(inputState.inputVariables.subject.value),
-			messageTemplate = Handlebars.compile(inputState.inputVariables.message.value);
-		inputState.compiledMessage = messageTemplate(data);
-		inputState.compiledSubject = subjectTemplate(data);
-	}
-
-	return inputState;
-}
-
-/**
- * conditionally created the values for the payload as there are changes
- * @param stateInputObj
- * @returns {{sender: string, discount_code: string, recipient: string, contact_first_name: string, discount_rate: string}}
- */
-const createDataPayload = stateInputObj => {
-	// return {
-	// 	sender: stateInputObj.sender.value,
-	// 	recipient: stateInputObj.recipient.value,
-	// 	contact_first_name: stateInputObj.contactFirstName.value,
-	// 	discount_rate: stateInputObj.discountRate.value.toString().concat("%"),
-	// 	discount_code: stateInputObj.discountCode.value
-	// };
-
-	return {
-		sender_email: stateInputObj.inputVariables.sender.value,
-		recipient_email: stateInputObj.inputVariables.recipient.value,
-		subject: stateInputObj.compiledSubject,
-		message: stateInputObj.compiledMessage
-	};
-}
 
 export const mainReducer = (state, action) => {
-	let copyOfState = {...state};
-
-	const inputKeys = Object.keys(initState.inputVariables),
-		data = createDataPayload(copyOfState);
-
+	const inputKeys = Object.keys(state.inputVariables);
+	let copyOfState = {...state},
+		templateValues = generateTemplateValues(state.inputVariables);
 
 	switch (action.type) {
-		case actionTypes.resetAll:
-			let refreshedState = {...copyOfInitState};
-			refreshedState.showInputDrawer = state.showInputDrawer;
-			refreshedState.showPreview = state.showPreview;
-
-			const newData = createDataPayload(refreshedState);
-			if (refreshedState.showPreview) refreshedState = updateParsedState(refreshedState, newData);
-
-			return {
-				...refreshedState
-			}
 		case actionTypes.changeInput:
 			const inputKey = snakeCaseToCamelCase(action.inputName),
-				helperText = validateByType(state.inputVariables[inputKey].type, action.value)
+				helperText = validateByType(state.inputVariables[inputKey].type, action.value);
+
+
 			let copyOfInputData = {
 				...copyOfState.inputVariables[inputKey],
 				touched: true,
@@ -209,35 +171,44 @@ export const mainReducer = (state, action) => {
 				helperText,
 				error: !!helperText
 			};
-			copyOfState.inputVariables[inputKey] = copyOfInputData;
-			let hasActionError = false;
-			for(let i = 0; i < inputKeys.length; i++) {
-				const inputObj = copyOfState.inputVariables[inputKeys[i]];
-				if (inputObj.required && inputObj.error) {
-					hasActionError = true;
-					break;
+
+			//double check sender email to match sendgrids (could grab these emails via api, make a dropdown
+			if (!helperText && copyOfInputData.name === "sender_email") {
+				let validSendingEmails = ["dpitcock+sendgrid@gmail.com"];
+				if (validSendingEmails.indexOf(copyOfInputData.value) === -1) {
+					copyOfInputData.error = true;
+					copyOfInputData.helperText = "Must be validated in Sendgrid"
 				}
 			}
-			copyOfState.actionsEnabled = !hasActionError && (
-				(!!copyOfState.compiledMessage && copyOfState.compiledMessage !== "Please fix invalid input") &&
-				(!!copyOfState.compiledSubject && copyOfState.compiledSubject  !== "Please fix invalid input")
-			);
+			copyOfState.inputVariables[inputKey] = copyOfInputData;
 
-			if (copyOfState.showPreview) copyOfState = updateParsedState(copyOfState, data);
+			let hasActionError = false;
+				// resetDisabled = false;
+			for(let i = 0; i < inputKeys.length; i++) {
+				const inputObj = copyOfState.inputVariables[inputKeys[i]],
+					hasError = inputObj.required && inputObj.error;
+					//isChanged = inputObj.value !== inputObj.previousValue;
+
+				hasActionError = hasError? hasError : hasActionError;
+				//resetDisabled = isChanged ? !isChanged : resetDisabled;
+			}
 
 			return {
-				...copyOfState
+				...copyOfState,
+				actionsEnabled: !hasActionError
+				//resetEnabled: !resetDisabled
 			};
 		case actionTypes.openPreview:
-			copyOfState = updateParsedState(copyOfState, data);
-			copyOfState.showPreview = true;
+			if (copyOfState.actionsEnabled) {
+				copyOfState.showPreview = true;
+				copyOfState.previewData = generatePreviewData(copyOfState, templateValues)
+			}
 
 			return {
 				...copyOfState
 			};
 		case actionTypes.closePreview:
-			copyOfState.compiledMessage = null;
-			copyOfState.compiledSubject = null;
+			copyOfState.previewData = {};
 			copyOfState.showPreview = false;
 			return {
 				...copyOfState
@@ -255,21 +226,24 @@ export const mainReducer = (state, action) => {
 		case actionTypes.showFetching:
 			return {
 				...copyOfState,
-				showFetching: true
+				showFetching: true,
+				actionsEnabled: false
 			}
 		case actionTypes.sendTestEmail:
-			//weird error so not usign this
-			//SendAPI.post("api/send-test-email/", data).then(response => {
-			if (state.showFetching) {
-				axios.post(`http://localhost:5000/api/send-test-email`, data).then(response => {
-					const k = response;
+			if (copyOfState.showFetching && Object.keys(templateValues).length > 0) {
+				//weird error so not using this since this would be best for using in multiple different enviroments and testiing
+
+				//SendAPI.post("api/send-test-email/", data).then(response => {
+
+				axios.post(`http://localhost:5000/api/send-test-email`, copyOfState.previewData).then(response => {
 					return {
 						...copyOfState,
 						showFetching: false,
+						actionsEnabled: true,
 						snackbar: {
 							...state.snackbar,
 							messageInfo: {
-								message: "Preview email has been sent",
+								message: "Template successfully sent",
 								key: new Date().getTime()
 							},
 							open: true
@@ -281,6 +255,7 @@ export const mainReducer = (state, action) => {
 					return {
 						...copyOfState,
 						showFetching: false,
+						actionsEnabled: true,
 						snackbar: {
 							...state.snackbar,
 							messageInfo: {
@@ -294,7 +269,8 @@ export const mainReducer = (state, action) => {
 			}
 			return {
 				...state,
-				showFetching: false
+				showFetching: false,
+				actionsEnabled: true
 			}
 		case actionTypes.addSnackbar:
 			return {
@@ -302,7 +278,7 @@ export const mainReducer = (state, action) => {
 				snackbar: {
 					...state.snackbar,
 					messageInfo: {
-						message: action.messageContent,
+						message: action.message,
 						key: new Date().getTime()
 					},
 					open: true
@@ -329,5 +305,8 @@ export const mainReducer = (state, action) => {
 				...state
 			}
 	}
+}
 
+export const AppReducer = () => {
+	return useReducer(mainReducer, initialState);
 }

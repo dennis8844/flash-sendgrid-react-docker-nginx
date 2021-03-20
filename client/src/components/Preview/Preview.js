@@ -61,20 +61,22 @@ const useStyles = makeStyles((theme) => ({
 	}
 }));
 
-const PreviewDialog = (props) => {
+const Preview = (props) => {
+	console.log(props);
 	const {
 		open,
 		onClose,
-		sender,
-		recipient,
-		subject,
-		message,
+		data,
 		fetching,
 		onSendTestEmail
 	} = props,
 		messageElementRef = React.useRef(null),
 		classes = useStyles();
 
+	/**
+	 * sends a message once the button is clicked
+	 * @param e
+	 */
 	const handleSendMessege = e => {
 		if (e) {
 			onSendTestEmail(e);
@@ -82,12 +84,19 @@ const PreviewDialog = (props) => {
 		}
 	}
 
+	/**
+	 * Closes the preview mode
+	 * @param e
+	 */
 	const handleClose = e => {
 		if (e) {
 			onClose(e);
 		}
 	}
 
+	/**
+	 * Sets focus inside the preview - no changes can be made
+	 */
 	React.useEffect(() => {
 		if (open) {
 			const { current: messageElement } = messageElementRef;
@@ -105,6 +114,9 @@ const PreviewDialog = (props) => {
 			aria-labelledby="scroll-dialog-title"
 			aria-describedby="scroll-dialog-description"
 			className={classes.dialog}
+			fullWidth
+			maxWidth="md"
+			data-testId="message-preview"
 		>
 			{fetching && <div className={classes.fetching}>
 					<CircularProgress color="secondary" />
@@ -112,33 +124,40 @@ const PreviewDialog = (props) => {
 			}
 			<DialogTitle id="scroll-dialog-title" className={classes.dialogHeader}>
 				<Toolbar className={classes.toolbar}>
-					<div className="half">
-						From: {sender}
+					<div className="half" data-testId="sender_email">
+						From: {data.sender_email}
 					</div>
-					<div className="half">
-						To: {recipient}
+					<div className="half" data-testId="recipient_email">
+						To: {data.recipient_email}
 					</div>
 				</Toolbar>
 				<Toolbar className={classes.toolbar}>
-					<div>
-						Subject: {subject}
+					<div data-testId="subject">
+						Subject: {data.subject}
 					</div>
 				</Toolbar>
 			</DialogTitle>
 			<DialogContent dividers >
 				<DialogContentText
 					id="scroll-dialog-description"
+					data-testId="message"
 					ref={messageElementRef}
 					tabIndex={-1}
 					className={classes.dialogContentText}
-					dangerouslySetInnerHTML={{ __html: message }}
+					dangerouslySetInnerHTML={{ __html: data.message }}
 				/>
 			</DialogContent>
 			<DialogActions>
-				<Button onClick={handleClose} color="primary">
+				<Button onClick={e => handleClose(e)}
+						color="primary"
+						data-testId="close-btn"
+				>
 					Close
 				</Button>
-				<Button onClick={handleSendMessege} color="primary">
+				<Button onClick={e => handleSendMessege(e)}
+						color="primary"
+						data-testId="send-message-btn"
+				>
 					Send Test Messege
 				</Button>
 			</DialogActions>
@@ -146,24 +165,28 @@ const PreviewDialog = (props) => {
 	);
 }
 
-PreviewDialog.defaultProps = {
-	open: false,
-	fetching: false,
-	sender: "",
-	recipient: "",
-	subject: "",
-	message: ""
+Preview.defaultProps = {
+	open: true, //will always be open due to rendered conditionally
+	fetching: false, //shows a loading element, yet fetches are fast
+	data: { //should never be empty when open
+		// 	sender_email: "",
+		// 	recipient_email: "",
+		// 	subject: "",
+		// 	message: ""
+	}
 };
 
-PreviewDialog.propTypes = {
+Preview.propTypes = {
 	fetching: PropTypes.bool.isRequired,
 	open: PropTypes.bool.isRequired,
 	onClose: PropTypes.func.isRequired,
-	sender: PropTypes.string.isRequired,
-	recipient: PropTypes.string.isRequired,
-	subject: PropTypes.string.isRequired,
-	message: PropTypes.string.isRequired,
+	data: PropTypes.shape({
+		sender: PropTypes.string.isRequired,
+		recipient: PropTypes.string.isRequired,
+		subject: PropTypes.string.isRequired,
+		message: PropTypes.string.isRequired
+	}).isRequired,
 	onSendTestEmail: PropTypes.func.isRequired
 };
 
-export default PreviewDialog;
+export default Preview;

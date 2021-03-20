@@ -1,0 +1,15 @@
+FROM node:14.5.0
+
+# copy _designsystem/package.json and _designsystem/yarn-lock.json into /usr/app
+WORKDIR /usr/app
+
+COPY  _designsystem/package*.json ./
+
+RUN rm -rf node_modules && yarn install --frozen-lockfile
+
+COPY . .
+
+EXPOSE 6006
+
+# start the storybook server
+CMD ["yarn", "storybook"]

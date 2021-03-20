@@ -1,0 +1,10 @@
+# Ignore all files by default
+*
+
+# White list only the required files
+!tests/
+!views/
+!.env
+!__init__.py
+!config.py
+!create_app.py
